@@ -1,27 +1,35 @@
 let table_data;
 
-let xhr = new XMLHttpRequest();
-xhr.open('GET', `https://api.coingecko.com/api/v3/search?query=bitcoin`);
-xhr.send();
+$('.noEnterSubmit').on('change',function(e){
+  search_box = e.target.value;
+  console.log(search_box);
+  pull_from_coingecho(table_data);
+});
 
-xhr.onload = function() {
-  if (xhr.status != 200) { // analyze HTTP status of the response
-    //alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
-    console.log(`Error ${xhr.status}: ${xhr.statusText}`);
-  } else { // show the result
-    //alert(`Done, got ${xhr.response.length} bytes`); // response is the server response
-    table_data = JSON.parse(xhr.response).coins
-    //console.log(table_data)
-    table_data.forEach((element, index, array) => {
-      xhr_loop(element);
-      //console.log(element.id); // 100, 200, 300
-  });
-  
-  console.log(table_data);
-  
-  
-  }
-};
+function pull_from_coingecho(table_data) {
+  let xhr = new XMLHttpRequest();
+  xhr.open('GET', `https://api.coingecko.com/api/v3/search?query=${search_box}`);
+  xhr.send();
+
+  xhr.onload = function() {
+    if (xhr.status != 200) { // analyze HTTP status of the response
+      alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+      console.log(`Error ${xhr.status}: ${xhr.statusText}`);
+    } else { // show the result
+      //alert(`Done, got ${xhr.response.length} bytes`); // response is the server response
+      table_data = JSON.parse(xhr.response).coins
+      if (table_data.length === 0) {
+        alert(`Invalid input ${search_box}`); // e.g. 404: Not Found
+      }
+      //console.log(table_data)
+      table_data.forEach((element, index, array) => {
+        xhr_loop(element);
+        //console.log(element.id); // 100, 200, 300
+    });
+    console.log(table_data);
+    }
+  };
+}
 
 function append_to_coin_table(table_data) {
 
@@ -48,7 +56,7 @@ function xhr_loop(element) {
   xhr_loop.send();
   xhr_loop.onload = function() {
     if (xhr_loop.status != 200) { // analyze HTTP status of the response
-      //alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+      alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
       console.log(`Error ${xhr_loop.status}: ${xhr_loop.statusText}`);
     } else { // show the result
       //alert(`Done, got ${xhr.response.length} bytes`); // response is the server response
