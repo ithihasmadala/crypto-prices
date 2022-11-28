@@ -1,90 +1,68 @@
-//const axios = require('axios');
-let response = null;
+let table_data;
 
-// Builds the HTML Table out of myList.
+let xhr = new XMLHttpRequest();
+xhr.open('GET', `https://api.coingecko.com/api/v3/search?query=bitcoin`);
+xhr.send();
 
-
-// Adds a header row to the table and returns the set of columns.
-// Need to do union of keys from all records as some records may not contain
-// all records.
-
-new Promise(async (resolve, reject) => {
-  try {
-    response = await axios.get('https://api.coinranking.com/v2/search-suggestions?query=bit', {
-      headers: {
-        'x-access-token': 'coinranking86b761a84874747cae3bf5199405626ea0bd1959c3b98a94',
-      },
-    });
-  } catch(ex) {
-    response = null;
-    // error
-    console.log(ex);
-    reject(ex);
+xhr.onload = function() {
+  if (xhr.status != 200) { // analyze HTTP status of the response
+    //alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+    console.log(`Error ${xhr.status}: ${xhr.statusText}`);
+  } else { // show the result
+    //alert(`Done, got ${xhr.response.length} bytes`); // response is the server response
+    table_data = JSON.parse(xhr.response).coins
+    //console.log(table_data)
+    table_data.forEach((element, index, array) => {
+      xhr_loop(element);
+      //console.log(element.id); // 100, 200, 300
+  });
+  
+  console.log(table_data);
+  
+  
   }
-  if (response) {
-    // success
-    const json = response.data;
-    table_data = json.data.coins
+};
 
-    document.body.appendChild(buildHtmlTable([{
-      "name": "abc",
-      "age": 50
-    },
-    {
-      "age": "25",
-      "hobby": "swimming"
-    },
-    {
-      "name": "xyz",
-      "hobby": "programming"
+function append_to_coin_table(table_data) {
+
+    let table = document.getElementById('coin_data');
+    for (let obj of table_data) {
+        //let row = document.createElement('tr');
+        table.innerHTML += `
+        <tr>
+            <td><img src=${obj.thumb} />
+            <td>${obj.name} (${obj.symbol})
+            <td>$${obj.price}
+        </tr>
+      `;
+      //table.appendChild(row);
+
     }
-  ]));
-    console.log(table_data);
-    resolve(json);
-  }
-});
 
+    console.log(table);
+};
 
-var _table_ = document.createElement('table'),
-  _tr_ = document.createElement('tr'),
-  _th_ = document.createElement('th'),
-  _td_ = document.createElement('td');
+function xhr_loop(element) {
+  let xhr_loop = new XMLHttpRequest();
+  xhr_loop.open('GET', `https://api.coingecko.com/api/v3/simple/price?ids=${element.id}&vs_currencies=usd`);
+  xhr_loop.send();
+  xhr_loop.onload = function() {
+    if (xhr_loop.status != 200) { // analyze HTTP status of the response
+      //alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+      console.log(`Error ${xhr_loop.status}: ${xhr_loop.statusText}`);
+    } else { // show the result
+      //alert(`Done, got ${xhr.response.length} bytes`); // response is the server response
+      //console.log("Each coin:");
+      coin_name = element.id;
+      let price_of_coin = JSON.parse(xhr_loop.response)[coin_name].usd // 100, 200, 300
+      element.price = price_of_coin;
+      console.log(element)
+      delete element.id;
+      delete element.api_symbol;
+      delete element.large;
+      delete element.market_cap_rank;
 
-// Builds the HTML Table out of myList json data from Ivy restful service.
-function buildHtmlTable(arr) {
-  var table = _table_.cloneNode(false),
-    columns = addAllColumnHeaders(arr, table);
-  for (var i = 0, maxi = arr.length; i < maxi; ++i) {
-    var tr = _tr_.cloneNode(false);
-    for (var j = 0, maxj = columns.length; j < maxj; ++j) {
-      var td = _td_.cloneNode(false);
-      var cellValue = arr[i][columns[j]];
-      td.appendChild(document.createTextNode(arr[i][columns[j]] || ''));
-      tr.appendChild(td);
+      append_to_coin_table([element]);
     }
-    table.appendChild(tr);
-  }
-  return table;
-}
-
-// Adds a header row to the table and returns the set of columns.
-// Need to do union of keys from all records as some records may not contain
-// all records
-function addAllColumnHeaders(arr, table) {
-  var columnSet = [],
-    tr = _tr_.cloneNode(false);
-  for (var i = 0, l = arr.length; i < l; i++) {
-    for (var key in arr[i]) {
-      if (arr[i].hasOwnProperty(key) && columnSet.indexOf(key) === -1) {
-        columnSet.push(key);
-        var th = _th_.cloneNode(false);
-        th.appendChild(document.createTextNode(key));
-        tr.appendChild(th);
-      }
-    }
-  }
-  table.appendChild(tr);
-  return columnSet;
-}
-
-
+  };
+};
